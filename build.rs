@@ -1,8 +1,8 @@
-extern crate gcc;
+extern crate cc;
 
 fn main() {
     if cfg!(feature = "test") {
-        gcc::Config::new()
+        cc::Build::new()
             .file("src/bcndecode.c")
             .compile("libbcndecode.a");
     }
