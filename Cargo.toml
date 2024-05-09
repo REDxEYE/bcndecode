@@ -10,7 +10,7 @@ homepage = "https://github.com/REDxEYE/bcndecode"
 keywords = ["bcn", "dxt", "image-processing"]
 
 [build-dependencies]
-cc = "1.0.96"
+cc = "1.0.95"
 
 [dev-dependencies]
 libc = "0.2.26"
