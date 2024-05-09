@@ -420,18 +420,18 @@ fn decode_bc6h_block(col: &mut [RGB32f], source: &[u8], sign: bool) {
     }
     if sign || info.tr > 0 {
         // sign-extend e1,2,3 if signed or deltas
-        let mut i = 3;
-        while i < numep {
+        for i in (3..numep).step_by(3) {
             bc6_sign_extend(&mut endpoints[i + 0], info.rb as isize);
             bc6_sign_extend(&mut endpoints[i + 1], info.gb as isize);
             bc6_sign_extend(&mut endpoints[i + 2], info.bb as isize);
-            i += 3;
         }
     }
     if info.tr > 0 {
         // apply deltas
-        for i in 3..numep {
-            endpoints[i] = ((endpoints[i] as usize + endpoints[0] as usize) & mask as usize) as u16;
+        for i in (3..numep).step_by(3) {
+            endpoints[i + 0] = (endpoints[i + 0].wrapping_add(endpoints[0])) & mask;
+            endpoints[i + 1] = (endpoints[i + 1].wrapping_add(endpoints[1])) & mask;
+            endpoints[i + 2] = (endpoints[i + 2].wrapping_add(endpoints[2])) & mask;
         }
     }
     let mut ueps: [isize; 12] = [0; 12];
@@ -441,12 +441,8 @@ fn decode_bc6h_block(col: &mut [RGB32f], source: &[u8], sign: bool) {
     for i in 0..16 {
         let s = bc7_get_subset(info.ns, partition as usize, i) * 6;
         let mut ib2 = ib as usize;
-        if i == 0 {
+        if i == 0 || (info.ns == 2 && i == BC7_AI0[partition as usize] as usize) {
             ib2 -= 1;
-        } else if info.ns == 2 {
-            if i == BC7_AI0[partition as usize] as usize {
-                ib2 -= 1;
-            }
         }
         let i0 = get_bits(source, bit, ib2) as usize;
         bit += ib2;
@@ -523,13 +519,20 @@ fn half_to_float(h: u16) -> f32 {
 
 #[derive(Default)]
 struct Bc6ModeInfo {
-    ns: u8,  /* number of subsets (also called regions) */
-    tr: u8,  /* whether endpoints are delta-compressed */
-    pb: u8,  /* partition bits */
-    epb: u8, /* endpoint bits */
-    rb: u8,  /* red bits (delta) */
-    gb: u8,  /* green bits (delta) */
-    bb: u8,  /* blue bits (delta) */
+    ns: u8,
+    /* number of subsets (also called regions) */
+    tr: u8,
+    /* whether endpoints are delta-compressed */
+    pb: u8,
+    /* partition bits */
+    epb: u8,
+    /* endpoint bits */
+    rb: u8,
+    /* red bits (delta) */
+    gb: u8,
+    /* green bits (delta) */
+    bb: u8,
+    /* blue bits (delta) */
 }
 
 impl Bc6ModeInfo {
